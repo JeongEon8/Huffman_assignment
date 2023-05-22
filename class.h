@@ -7,12 +7,39 @@
 
 #include <iostream>
 #include <cstdio>
-#include <cstring>
 #include <fstream>
+#include <queue>
+#include <stack>
+#include <list>
+#include <string>
+#include <cstring>
+#include <algorithm>
 
 using namespace std;
 
 # define MAX_LENGTH		1000
+
+class Node {
+public:
+	Node();		// 생성자
+	~Node();	// 소멸자
+
+	void SetNode(char symbol, int frequency, Node* left, Node* right, Node* parent);	// 노드 정의하는 함수
+	void ShowNode();	// 노드 정보 출력하는 함수
+
+	char GetSymbol();	// 노드 Symbol 반환 함수
+	int GetFrequency();	// 노드 frequency 반환 함수
+	Node* GetLeftNode();	// 노드의 왼쪽 노드 반환 함수
+	Node* GetRightNode();	// 노드의 오른쪽 노드 반환 함수
+	Node* GetParentNode();	// 노드의 부모 노드 반환 함수
+
+private:
+	char symbol = NULL;
+	int frequency = 0;
+	Node* left = 0;
+	Node* right = 0;
+	Node* parent = 0;
+};
 
 int Symbol_Num = 69;	// 등장한 Symbol 종류 개수
 int Symbol_frequency[69] = { 0 };	// 등장한 Symbol 종류별 빈도수
@@ -28,34 +55,62 @@ char Symbol[69] = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',	// Symbol
 					'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
 					'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
 					'8', '9', ' ', ',', '.', '!', '?', '-', 'CR' };
+queue<Node*> Node_queue; // 전역 node 큐 생성
+list<Node*> Node_list;	// 전역 Node 리스트 생성
+int depth = 0;	// 트리의 detpth를 저장할 전역 변수 생성
+bool change = false;	// false -> 루트 기준 왼쪽 트리 탐색, true -> 루트 기준 오른쪽 트리 탐색
 
-class Node {
-public:
-	Node();		// 생성자
-	~Node();	// 소멸자
-	
-	void SetNode(char symbol, int frequency, Node* left, Node* right);
-	void ShowNode();
-
-private:
-	char symbol = NULL;
-	int frequency = 0;
-	Node* left = 0;
-	Node* right = 0;
-};
+// 함수 선언부
+void frequency(char arr[MAX_LENGTH], int enterkey); // 문자 빈도수를 반환하는 함수
+void CountSymbol();	// 문자 개수를 세는 함수
+void Ascending(); // 오름차순으로 바꿔주는 함수
+Node* ShowLeft_leafNode(Node* ptr, Node* node, Node* parent_node, int parent_num, int n);	// 왼쪽 leaf 노드를 출력하는 함수
+Node* ShowRight_leafNode(Node* ptr, Node* node, Node* parent_node, int parent_num, int n);// 오른쪽 leaf 노드를 출력하는 함수
+void ShowTree(Node* node, Node* parent_node, int parent_num, int n); // 트리를 출력하는 함수
+Node* ShowLeft_leafNode(Node* ptr, Node* node, Node* parent_node, int parent_num, int n);	// 왼쪽 leaf 노드 함수
+Node* ShowRight_leafNode(Node* ptr, Node* node, Node* parent_node, int parent_num, int n);// 오른쪽 leaf 노드 함수
+void Node_Huffman(Node* ptr, Node* node, Node* parent_node, int parent_num, int n, stack<int> huffman); // 노드의 허프만 코드를 만드는 함수
 
 Node::Node() { }	// 생성자
 Node::~Node() { }	// 소멸자
 
-void Node::SetNode(char symbol, int frequency, Node* left, Node* right) {
+// 노드 정의하는 함수
+void Node::SetNode(char symbol, int frequency, Node* left, Node* right, Node* parent) {
 	this->symbol = symbol;
 	this->frequency = frequency;
 	this->left = left;
 	this->right = right;
+	this->parent = parent;
 }
 
+// 노드 정보 출력하는 함수
 void Node::ShowNode() {
 	printf("symbol: %c\tfrequency: %d\n", this->symbol, this->frequency);
+}
+
+// 노드 Symbol 반환 함수
+char Node::GetSymbol() {
+	return this->symbol;
+}
+
+// 노드 frequency 반환 함수
+int Node::GetFrequency() {
+	return this->frequency;
+}
+
+// 노드의 왼쪽 노드 반환 함수
+Node* Node::GetLeftNode() {
+	return this->left;
+}
+
+// 노드의 오른쪽 노드 반환 함수
+Node* Node::GetRightNode() {
+	return this->right;
+}
+
+// 노드의 부모 노드 반환 함수
+Node* Node::GetParentNode() {
+	return this->parent;
 }
 
 // 문자 빈도수를 반환하는 함수
@@ -102,6 +157,155 @@ void CountSymbol() {
 	for (int i = 0; i < 69; i++) {
 		if (Symbol_frequency[i] == 0) {
 			Symbol_Num--;
+		}
+	}
+}
+
+// 오름차순으로 바꿔주는 함수
+void Ascending() {
+	Node* node = new Node[Node_queue.size()];
+	Node tmp;
+	int length = Node_queue.size();
+
+	for (int i = 0; i < length; i++) {
+		// node[i].SetNode(Node_queue.front()->GetSymbol(), Node_queue.front()->GetFrequency(), Node_queue.front()->GetLeftNode(), Node_queue.front()->GetRightNode(), Node_queue.front()->GetParentNode());
+		node[i] = *Node_queue.front();
+		Node_queue.pop();
+	}
+
+	for (int i = length - 1; i > 0; i--) {
+		for (int j = 0; j < i; j++) {
+			if (node[j].GetFrequency() >= node[j + 1].GetFrequency()) {
+				tmp = node[j];
+				node[j] = node[j + 1];
+				node[j + 1] = tmp;
+			}
+		}
+	}
+
+	for (int i = 0; i < length; i++) {
+		Node_queue.push(&node[i]);
+	}
+}
+
+// 왼쪽 leaf 노드를 출력하는 함수
+Node* ShowLeft_leafNode(Node* ptr, Node* node, Node* parent_node, int parent_num, int n) {
+	while (1) {
+		if (ptr->GetLeftNode() == 0) {
+			ptr->ShowNode();
+			ptr = ptr->GetParentNode();
+			for (int i = 0; i < parent_num; i++) {
+				if (parent_node[i].GetFrequency() == ptr->GetFrequency() && parent_node[i].GetLeftNode() == ptr->GetLeftNode()) {
+					ptr->SetNode(parent_node[i].GetSymbol(), parent_node[i].GetFrequency(), parent_node[i].GetLeftNode(), parent_node[i].GetRightNode(), parent_node[i].GetParentNode());
+					Node_list.push_back(ptr);
+					break;
+				}
+			}
+			depth--;
+			break;
+		}
+		else {
+			ptr = ptr->GetLeftNode();
+			if (ptr->GetSymbol() != NULL) {
+				for (int i = 0; i < n; i++) {
+					if (node[i].GetSymbol() == ptr->GetSymbol() && node[i].GetFrequency() == ptr->GetFrequency()) {
+						ptr->SetNode(node[i].GetSymbol(), node[i].GetFrequency(), node[i].GetLeftNode(), node[i].GetRightNode(), node[i].GetParentNode());
+						Node_list.push_back(ptr);
+						break;
+					}
+				}
+			}
+			else {
+				for (int i = 0; i < parent_num; i++) {
+					if (parent_node[i].GetFrequency() == ptr->GetFrequency() && parent_node[i].GetLeftNode() == ptr->GetLeftNode()) {
+						ptr->SetNode(parent_node[i].GetSymbol(), parent_node[i].GetFrequency(), parent_node[i].GetLeftNode(), parent_node[i].GetRightNode(), parent_node[i].GetParentNode());
+						Node_list.push_back(ptr);
+						break;
+					}
+				}
+			}
+			depth++;
+		}
+	}
+
+	return ptr;
+}
+
+// 오른쪽 leaf 노드를 출력하는 함수
+Node* ShowRight_leafNode(Node* ptr, Node* node, Node* parent_node, int parent_num, int n) {
+	Node_list.unique();
+	list<Node*> find_list = Node_list;
+	int length;
+	while (1) {
+		if (ptr->GetRightNode() == 0) {
+			printf("\t\t\t\t");
+			ptr->ShowNode();
+			length = find_list.size();
+			for (int i = 0; i < length; i++) {
+				ptr->GetParentNode()->GetLeftNode()
+			}
+			ptr = ptr->GetParentNode();
+			for (int i = 0; i < parent_num; i++) {
+				if (parent_node[i].GetFrequency() == ptr->GetFrequency() && parent_node[i].GetRightNode() == ptr->GetRightNode()) {
+					ptr->SetNode(parent_node[i].GetSymbol(), parent_node[i].GetFrequency(), parent_node[i].GetLeftNode(), parent_node[i].GetRightNode(), parent_node[i].GetParentNode());
+					Node_list.push_back(ptr);
+					break;
+				}
+			}
+			change = true;
+			depth = 0;
+			break;
+		}
+		else {
+			ptr = ptr->GetRightNode();
+			if (ptr->GetSymbol() != NULL) {
+				for (int i = 0; i < n; i++) {
+					if (node[i].GetSymbol() == ptr->GetSymbol()) {
+						ptr->SetNode(node[i].GetSymbol(), node[i].GetFrequency(), node[i].GetLeftNode(), node[i].GetRightNode(), node[i].GetParentNode());
+						Node_list.push_back(ptr);
+						break;
+					}
+				}
+			}
+			else {
+				for (int i = 0; i < parent_num; i++) {
+					if (parent_node[i].GetFrequency() == ptr->GetFrequency() && parent_node[i].GetRightNode() == ptr->GetRightNode()) {
+						ptr->SetNode(parent_node[i].GetSymbol(), parent_node[i].GetFrequency(), parent_node[i].GetLeftNode(), parent_node[i].GetRightNode(), parent_node[i].GetParentNode());
+						Node_list.push_back(ptr);
+						break;
+					}
+				}
+			}
+			depth++;
+			if (ptr->GetSymbol() == NULL && ptr->GetFrequency() != 0) {
+				break;
+			}
+		}
+	}
+
+	return ptr;
+}
+
+// 트리를 출력하는 함수
+void ShowTree(Node* node, Node* parent_node, int parent_num, int n) {
+	Node* ptr = &parent_node[parent_num - 1];
+	Node_list.push_back(ptr);
+
+	while (1) {
+		if (change == true) {
+			printf("\t\t\t\t");
+			ptr = ShowRight_leafNode(ptr, node, parent_node, parent_num, n);
+			if (depth == 0) {
+				break;
+			}
+			else {
+				printf("\t\t\t\t");
+				ptr = ShowLeft_leafNode(ptr, node, parent_node, parent_num, n);
+			}
+		}
+		else {
+			ptr = ShowLeft_leafNode(ptr, node, parent_node, parent_num, n);
+			ptr = ShowRight_leafNode(ptr, node, parent_node, parent_num, n);
 		}
 	}
 }

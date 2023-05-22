@@ -28,13 +28,16 @@ int main(void) {
 		enterkey++;
 		frequency(arr, enterkey);
 	}
-
-	fclose(inputFile);
+	
 	CountSymbol();
 
 	Node* node = new Node[Symbol_Num];	// node 배열 생성
+	Node* parent_node = new Node[Symbol_Num];	// parent_node 배열 생성
 	int n = 0;	// node 배열에 하나씩 저장하기 위한 변수
+	int parent_num = 0;	// 부모 node 배열의 위치를 알려주는 변수
+	stack<int> huffman;	// 허프만 코드를 만들기 위한 stack
 
+	// 노드 생성
 	for (int i = 0; i < 69; i++) {
 		int tmp = 0;
 
@@ -43,16 +46,147 @@ int main(void) {
 				continue;
 			}
 
-			if (Symbol_frequency[tmp] < Symbol_frequency[i]) { // 가장 빈도수 큰 위치를 찾음
+			if (Symbol_frequency[tmp] <= Symbol_frequency[j]) { // 가장 빈도수 큰 위치를 찾음
 				tmp = j;
 			}
 		}
 
-		if (tmp != 0) {	// 노드 생성
-			node[n].SetNode(Symbol[tmp], Symbol_frequency[tmp], 0, 0);
+		if (Symbol_frequency[tmp] != 0) {	// 노드 생성
+			node[n].SetNode(Symbol[tmp], Symbol_frequency[tmp], 0, 0, 0);
+			Node_queue.push(&node[n]);	// list에 내림차순으로 노드 저장
+			Symbol_frequency[tmp] = 0;
+			n++;
 		}
 	}
 
+	queue<Node*> test = Node_queue;
+	int length = test.size();
+	for (int i = 0; i < length; i++) {
+		test.front()->ShowNode();
+		test.pop();
+	}
+	printf("\n");
+
+	// 허프만 코드에 따른 트리 생성
+	while (!Node_queue.empty()) {
+		Node* node1 = 0;
+		Node* node2 = 0;
+
+		Ascending();	// node 큐 오름차순으로 정렬
+
+		// 빈도수가 가장 작은 2개 선택
+		if (Node_queue.size() != 1) {
+			node1 = Node_queue.front();
+			for (int i = 0; i < n; i++) {
+				if (node[i].GetSymbol() == node1->GetSymbol()) {
+					node1->SetNode(node[i].GetSymbol(), node[i].GetFrequency(), node[i].GetLeftNode(), node[i].GetRightNode(), node[i].GetParentNode());
+					break;
+				}
+			}
+			Node_queue.pop();
+			node2 = Node_queue.front();
+			for (int i = 0; i < n; i++) {
+				if (node[i].GetSymbol() == node2->GetSymbol()) {
+					node2->SetNode(node[i].GetSymbol(), node[i].GetFrequency(), node[i].GetLeftNode(), node[i].GetRightNode(), node[i].GetParentNode());
+					break;
+				}
+			}
+			Node_queue.pop();
+		}
+		else {
+			Node_queue.pop();
+			break;
+		}
+
+		// 노드 2개를 함침
+		parent_node[parent_num].SetNode(NULL, node1->GetFrequency() + node2->GetFrequency(), node1, node2, 0);
+		Node_queue.push(&parent_node[parent_num]);
+		for (int i = 0; i < n; i++) {
+			if (node1->GetSymbol() == node[i].GetSymbol()) {
+				node[i].SetNode(node[i].GetSymbol(), node[i].GetFrequency(), node[i].GetLeftNode(), node[i].GetRightNode(), &parent_node[parent_num]);
+			}
+			if (node2->GetSymbol() == node[i].GetSymbol()) {
+				node[i].SetNode(node[i].GetSymbol(), node[i].GetFrequency(), node[i].GetLeftNode(), node[i].GetRightNode(), &parent_node[parent_num]);
+			}
+		}
+
+		for (int i = 0; i < parent_num; i++) {
+			if (node1->GetLeftNode() != 0) {
+				if (parent_node[i].GetFrequency() == node1->GetFrequency() && parent_node[i].GetLeftNode()->GetSymbol() == node1->GetLeftNode()->GetSymbol()) {
+					parent_node[i].SetNode(parent_node[i].GetSymbol(), parent_node[i].GetFrequency(), parent_node[i].GetLeftNode(), parent_node[i].GetRightNode(), &parent_node[parent_num]);
+				}
+			}
+			if (node2->GetLeftNode() != 0) {
+				if (parent_node[i].GetFrequency() == node2->GetFrequency() && parent_node[i].GetLeftNode()->GetSymbol() == node2->GetLeftNode()->GetSymbol()) {
+					parent_node[i].SetNode(parent_node[i].GetSymbol(), parent_node[i].GetFrequency(), parent_node[i].GetLeftNode(), parent_node[i].GetRightNode(), &parent_node[parent_num]);
+				}
+			}
+		}
+		parent_num++;
+	}
+
+	// 트리 출력
+	ShowTree(node, parent_node, parent_num, n);
+	
+	/*
+	int zero = 0;
+	int one = 1;
+	string** huffman_code = new string*[n];
+	for (int i = 0; i < n; i++) {
+		huffman_code[i] = new string[1000];
+	}
+
+	for (int j = 0; j < n; j++) {
+		Node* ptr = &node[j];
+
+		while (ptr->GetFrequency() != parent_node[parent_num-1].GetFrequency()) {
+			for (int i = 0; i < parent_num; i++) {
+				if (ptr->GetSymbol() == parent_node[i].GetLeftNode()->GetSymbol() && ptr->GetFrequency() == parent_node[i].GetLeftNode()->GetFrequency()) {
+					huffman.push(zero);
+					ptr = ptr->GetParentNode();
+					for (int i = 0; i < parent_num; i++) {
+						if (parent_node[i].GetFrequency() == ptr->GetFrequency()) {
+							ptr->SetNode(parent_node[i].GetSymbol(), parent_node[i].GetFrequency(), parent_node[i].GetLeftNode(), parent_node[i].GetRightNode(), parent_node[i].GetParentNode());
+							break;
+						}
+					}
+				}		
+				else if (ptr->GetSymbol() == parent_node[i].GetRightNode()->GetSymbol() && ptr->GetFrequency() == parent_node[i].GetRightNode()->GetFrequency()) {
+					huffman.push(one);
+					ptr = ptr->GetParentNode();
+					for (int i = 0; i < parent_num; i++) {
+						if (parent_node[i].GetFrequency() == ptr->GetFrequency()) {
+							ptr->SetNode(parent_node[i].GetSymbol(), parent_node[i].GetFrequency(), parent_node[i].GetLeftNode(), parent_node[i].GetRightNode(), parent_node[i].GetParentNode());
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		while (!huffman.empty()) {
+			huffman_code[j]->append(to_string(huffman.top()));
+			huffman.pop();
+		}
+	}
+	
+	char character;
+	character = getc(inputFile);
+	character = getc(inputFile);
+	for (int i = 0; i < n; i++) {
+		if (node[i].GetSymbol() == character) {
+			printf("%d", stoi(*huffman_code[i]));
+			break;
+		}
+	}
+
+	for (int i = 0; i < n; i++) {
+		delete[] huffman_code[i];
+	}
+
+	delete[] huffman_code;
+	*/
 	delete[] node;
+	// fclose(inputFile);
 	return 0;
 }
