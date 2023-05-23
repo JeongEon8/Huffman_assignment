@@ -198,6 +198,7 @@ Node* ShowLeft_leafNode(Node* ptr, Node* node, Node* parent_node, int parent_num
 				if (parent_node[i].GetFrequency() == ptr->GetFrequency() && parent_node[i].GetLeftNode() == ptr->GetLeftNode()) {
 					ptr->SetNode(parent_node[i].GetSymbol(), parent_node[i].GetFrequency(), parent_node[i].GetLeftNode(), parent_node[i].GetRightNode(), parent_node[i].GetParentNode());
 					Node_list.push_back(ptr);
+					ptr->ShowNode();
 					break;
 				}
 			}
@@ -220,6 +221,7 @@ Node* ShowLeft_leafNode(Node* ptr, Node* node, Node* parent_node, int parent_num
 					if (parent_node[i].GetFrequency() == ptr->GetFrequency() && parent_node[i].GetLeftNode() == ptr->GetLeftNode()) {
 						ptr->SetNode(parent_node[i].GetSymbol(), parent_node[i].GetFrequency(), parent_node[i].GetLeftNode(), parent_node[i].GetRightNode(), parent_node[i].GetParentNode());
 						Node_list.push_back(ptr);
+						ptr->ShowNode();
 						break;
 					}
 				}
@@ -233,27 +235,56 @@ Node* ShowLeft_leafNode(Node* ptr, Node* node, Node* parent_node, int parent_num
 
 // 오른쪽 leaf 노드를 출력하는 함수
 Node* ShowRight_leafNode(Node* ptr, Node* node, Node* parent_node, int parent_num, int n) {
-	Node_list.unique();
-	list<Node*> find_list = Node_list;
-	int length;
 	while (1) {
 		if (ptr->GetRightNode() == 0) {
 			printf("\t\t\t\t");
 			ptr->ShowNode();
-			length = find_list.size();
-			for (int i = 0; i < length; i++) {
-				ptr->GetParentNode()->GetLeftNode()
-			}
-			ptr = ptr->GetParentNode();
-			for (int i = 0; i < parent_num; i++) {
-				if (parent_node[i].GetFrequency() == ptr->GetFrequency() && parent_node[i].GetRightNode() == ptr->GetRightNode()) {
-					ptr->SetNode(parent_node[i].GetSymbol(), parent_node[i].GetFrequency(), parent_node[i].GetLeftNode(), parent_node[i].GetRightNode(), parent_node[i].GetParentNode());
-					Node_list.push_back(ptr);
+			int c_depth = depth;
+			for (int i = 0; i < c_depth; i++) {
+				ptr = ptr->GetParentNode();
+				depth--;
+				for (int j = 0; j < parent_num; j++) {
+					if (parent_node[j].GetFrequency() == ptr->GetFrequency() && parent_node[j].GetRightNode() == ptr->GetRightNode()) {
+						ptr->SetNode(parent_node[j].GetSymbol(), parent_node[j].GetFrequency(), parent_node[j].GetLeftNode(), parent_node[j].GetRightNode(), parent_node[j].GetParentNode());
+						Node_list.push_back(ptr);
+						ptr->ShowNode();
+						break;
+					}
+				}
+				list<Node*> find_list = Node_list;
+				int length = find_list.size();
+				int k;
+				for (k = 0; k < length; k++) {
+					if (ptr->GetRightNode() == 0) {
+						break;
+					}
+					if (ptr->GetRightNode()->GetSymbol() == find_list.front()->GetSymbol() && ptr->GetRightNode()->GetFrequency() == find_list.front()->GetFrequency()) {
+						break;
+					}
+					find_list.pop_front();
+				}
+				if (k == length) {
+					ptr = ptr->GetRightNode();
+					depth++;
+					for (int j = 0; j < n; j++) {
+						if (node[j].GetSymbol() == ptr->GetSymbol()) {
+							ptr->SetNode(node[j].GetSymbol(), node[j].GetFrequency(), node[j].GetLeftNode(), node[j].GetRightNode(), node[j].GetParentNode());
+							Node_list.push_back(ptr);
+							break;
+						}
+					}
+					for (int j = 0; j < parent_num; j++) {
+						if (parent_node[j].GetFrequency() == ptr->GetFrequency() && parent_node[j].GetRightNode() == ptr->GetRightNode()) {
+							ptr->SetNode(parent_node[j].GetSymbol(), parent_node[j].GetFrequency(), parent_node[j].GetLeftNode(), parent_node[j].GetRightNode(), parent_node[j].GetParentNode());
+							Node_list.push_back(ptr);
+							ptr->ShowNode();
+							break;
+						}
+					}
 					break;
 				}
 			}
 			change = true;
-			depth = 0;
 			break;
 		}
 		else {
@@ -272,6 +303,7 @@ Node* ShowRight_leafNode(Node* ptr, Node* node, Node* parent_node, int parent_nu
 					if (parent_node[i].GetFrequency() == ptr->GetFrequency() && parent_node[i].GetRightNode() == ptr->GetRightNode()) {
 						ptr->SetNode(parent_node[i].GetSymbol(), parent_node[i].GetFrequency(), parent_node[i].GetLeftNode(), parent_node[i].GetRightNode(), parent_node[i].GetParentNode());
 						Node_list.push_back(ptr);
+						ptr->ShowNode();
 						break;
 					}
 				}
@@ -292,20 +324,10 @@ void ShowTree(Node* node, Node* parent_node, int parent_num, int n) {
 	Node_list.push_back(ptr);
 
 	while (1) {
-		if (change == true) {
-			printf("\t\t\t\t");
-			ptr = ShowRight_leafNode(ptr, node, parent_node, parent_num, n);
-			if (depth == 0) {
-				break;
-			}
-			else {
-				printf("\t\t\t\t");
-				ptr = ShowLeft_leafNode(ptr, node, parent_node, parent_num, n);
-			}
+		if (depth == 0 && change == true) {
+			break;
 		}
-		else {
-			ptr = ShowLeft_leafNode(ptr, node, parent_node, parent_num, n);
-			ptr = ShowRight_leafNode(ptr, node, parent_node, parent_num, n);
-		}
+		ptr = ShowLeft_leafNode(ptr, node, parent_node, parent_num, n);
+		ptr = ShowRight_leafNode(ptr, node, parent_node, parent_num, n);
 	}
 }

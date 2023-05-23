@@ -59,6 +59,7 @@ int main(void) {
 		}
 	}
 
+	printf("¿©±â¾ß\n");
 	queue<Node*> test = Node_queue;
 	int length = test.size();
 	for (int i = 0; i < length; i++) {
