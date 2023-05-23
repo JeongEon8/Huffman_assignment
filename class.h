@@ -63,13 +63,14 @@ bool change = false;	// false -> 루트 기준 왼쪽 트리 탐색, true -> 루트 기준 오�
 // 함수 선언부
 void frequency(char arr[MAX_LENGTH], int enterkey); // 문자 빈도수를 반환하는 함수
 void CountSymbol();	// 문자 개수를 세는 함수
+void print_Node();	// 노드를 출력하는 함수
 void Ascending(); // 오름차순으로 바꿔주는 함수
 Node* ShowLeft_leafNode(Node* ptr, Node* node, Node* parent_node, int parent_num, int n);	// 왼쪽 leaf 노드를 출력하는 함수
 Node* ShowRight_leafNode(Node* ptr, Node* node, Node* parent_node, int parent_num, int n);// 오른쪽 leaf 노드를 출력하는 함수
 void ShowTree(Node* node, Node* parent_node, int parent_num, int n); // 트리를 출력하는 함수
 Node* ShowLeft_leafNode(Node* ptr, Node* node, Node* parent_node, int parent_num, int n);	// 왼쪽 leaf 노드 함수
 Node* ShowRight_leafNode(Node* ptr, Node* node, Node* parent_node, int parent_num, int n);// 오른쪽 leaf 노드 함수
-void Node_Huffman(Node* ptr, Node* node, Node* parent_node, int parent_num, int n, stack<int> huffman); // 노드의 허프만 코드를 만드는 함수
+void Node_Huffman(Node* node, Node* parent_node, int parent_num, int n, string** huffman_code, stack<int> huffman); // 노드의 허프만 코드를 만드는 함수
 
 Node::Node() { }	// 생성자
 Node::~Node() { }	// 소멸자
@@ -161,6 +162,17 @@ void CountSymbol() {
 	}
 }
 
+// 노드를 출력하는 함수
+void print_Node() {
+	queue<Node*> test = Node_queue;
+	int length = test.size();
+	for (int i = 0; i < length; i++) {
+		test.front()->ShowNode();
+		test.pop();
+	}
+	printf("\n");
+}
+
 // 오름차순으로 바꿔주는 함수
 void Ascending() {
 	Node* node = new Node[Node_queue.size()];
@@ -198,7 +210,7 @@ Node* ShowLeft_leafNode(Node* ptr, Node* node, Node* parent_node, int parent_num
 				if (parent_node[i].GetFrequency() == ptr->GetFrequency() && parent_node[i].GetLeftNode() == ptr->GetLeftNode()) {
 					ptr->SetNode(parent_node[i].GetSymbol(), parent_node[i].GetFrequency(), parent_node[i].GetLeftNode(), parent_node[i].GetRightNode(), parent_node[i].GetParentNode());
 					Node_list.push_back(ptr);
-					ptr->ShowNode();
+					// ptr->ShowNode();
 					break;
 				}
 			}
@@ -221,7 +233,7 @@ Node* ShowLeft_leafNode(Node* ptr, Node* node, Node* parent_node, int parent_num
 					if (parent_node[i].GetFrequency() == ptr->GetFrequency() && parent_node[i].GetLeftNode() == ptr->GetLeftNode()) {
 						ptr->SetNode(parent_node[i].GetSymbol(), parent_node[i].GetFrequency(), parent_node[i].GetLeftNode(), parent_node[i].GetRightNode(), parent_node[i].GetParentNode());
 						Node_list.push_back(ptr);
-						ptr->ShowNode();
+						// ptr->ShowNode();
 						break;
 					}
 				}
@@ -247,7 +259,7 @@ Node* ShowRight_leafNode(Node* ptr, Node* node, Node* parent_node, int parent_nu
 					if (parent_node[j].GetFrequency() == ptr->GetFrequency() && parent_node[j].GetRightNode() == ptr->GetRightNode()) {
 						ptr->SetNode(parent_node[j].GetSymbol(), parent_node[j].GetFrequency(), parent_node[j].GetLeftNode(), parent_node[j].GetRightNode(), parent_node[j].GetParentNode());
 						Node_list.push_back(ptr);
-						ptr->ShowNode();
+						// ptr->ShowNode();
 						break;
 					}
 				}
@@ -277,7 +289,7 @@ Node* ShowRight_leafNode(Node* ptr, Node* node, Node* parent_node, int parent_nu
 						if (parent_node[j].GetFrequency() == ptr->GetFrequency() && parent_node[j].GetRightNode() == ptr->GetRightNode()) {
 							ptr->SetNode(parent_node[j].GetSymbol(), parent_node[j].GetFrequency(), parent_node[j].GetLeftNode(), parent_node[j].GetRightNode(), parent_node[j].GetParentNode());
 							Node_list.push_back(ptr);
-							ptr->ShowNode();
+							// ptr->ShowNode();
 							break;
 						}
 					}
@@ -303,7 +315,7 @@ Node* ShowRight_leafNode(Node* ptr, Node* node, Node* parent_node, int parent_nu
 					if (parent_node[i].GetFrequency() == ptr->GetFrequency() && parent_node[i].GetRightNode() == ptr->GetRightNode()) {
 						ptr->SetNode(parent_node[i].GetSymbol(), parent_node[i].GetFrequency(), parent_node[i].GetLeftNode(), parent_node[i].GetRightNode(), parent_node[i].GetParentNode());
 						Node_list.push_back(ptr);
-						ptr->ShowNode();
+						// ptr->ShowNode();
 						break;
 					}
 				}
@@ -324,10 +336,50 @@ void ShowTree(Node* node, Node* parent_node, int parent_num, int n) {
 	Node_list.push_back(ptr);
 
 	while (1) {
-		if (depth == 0 && change == true) {
+		if (change == true && depth == 0) {
 			break;
 		}
 		ptr = ShowLeft_leafNode(ptr, node, parent_node, parent_num, n);
 		ptr = ShowRight_leafNode(ptr, node, parent_node, parent_num, n);
+	}
+}
+
+// 노드의 허프만 코드를 만드는 함수
+void Node_Huffman(Node* node, Node* parent_node, int parent_num, int n, string** huffman_code, stack<int> huffman) {
+	int zero = 0;
+	int one = 1;
+
+	for (int j = 0; j < n; j++) {
+		Node* ptr = &node[j];
+
+		while (ptr->GetFrequency() != parent_node[parent_num - 1].GetFrequency()) {
+			for (int i = 0; i < parent_num; i++) {
+				if (ptr->GetSymbol() == parent_node[i].GetLeftNode()->GetSymbol() && ptr->GetFrequency() == parent_node[i].GetLeftNode()->GetFrequency()) {
+					huffman.push(zero);
+					ptr = ptr->GetParentNode();
+					for (int i = 0; i < parent_num; i++) {
+						if (parent_node[i].GetFrequency() == ptr->GetFrequency()) {
+							ptr->SetNode(parent_node[i].GetSymbol(), parent_node[i].GetFrequency(), parent_node[i].GetLeftNode(), parent_node[i].GetRightNode(), parent_node[i].GetParentNode());
+							break;
+						}
+					}
+				}
+				else if (ptr->GetSymbol() == parent_node[i].GetRightNode()->GetSymbol() && ptr->GetFrequency() == parent_node[i].GetRightNode()->GetFrequency()) {
+					huffman.push(one);
+					ptr = ptr->GetParentNode();
+					for (int i = 0; i < parent_num; i++) {
+						if (parent_node[i].GetFrequency() == ptr->GetFrequency()) {
+							ptr->SetNode(parent_node[i].GetSymbol(), parent_node[i].GetFrequency(), parent_node[i].GetLeftNode(), parent_node[i].GetRightNode(), parent_node[i].GetParentNode());
+							break;
+						}
+					}
+				}
+			}
+		}
+
+		while (!huffman.empty()) {
+			huffman_code[j]->append(to_string(huffman.top()));
+			huffman.pop();
+		}
 	}
 }

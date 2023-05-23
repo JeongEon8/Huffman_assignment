@@ -59,14 +59,8 @@ int main(void) {
 		}
 	}
 
-	printf("여기야\n");
-	queue<Node*> test = Node_queue;
-	int length = test.size();
-	for (int i = 0; i < length; i++) {
-		test.front()->ShowNode();
-		test.pop();
-	}
-	printf("\n");
+	// 생성된 노드 출력
+	// print_Node();
 
 	// 허프만 코드에 따른 트리 생성
 	while (!Node_queue.empty()) {
@@ -127,67 +121,26 @@ int main(void) {
 	}
 
 	// 트리 출력
-	ShowTree(node, parent_node, parent_num, n);
+	// ShowTree(node, parent_node, parent_num, n);
 	
-	/*
-	int zero = 0;
-	int one = 1;
-	string** huffman_code = new string*[n];
+	string** huffman_code = new string*[n];	// 허프만 코드를 저장할 배열 생성
 	for (int i = 0; i < n; i++) {
 		huffman_code[i] = new string[1000];
 	}
 
-	for (int j = 0; j < n; j++) {
-		Node* ptr = &node[j];
+	Node_Huffman(node, parent_node, parent_num, n, huffman_code, huffman);
 
-		while (ptr->GetFrequency() != parent_node[parent_num-1].GetFrequency()) {
-			for (int i = 0; i < parent_num; i++) {
-				if (ptr->GetSymbol() == parent_node[i].GetLeftNode()->GetSymbol() && ptr->GetFrequency() == parent_node[i].GetLeftNode()->GetFrequency()) {
-					huffman.push(zero);
-					ptr = ptr->GetParentNode();
-					for (int i = 0; i < parent_num; i++) {
-						if (parent_node[i].GetFrequency() == ptr->GetFrequency()) {
-							ptr->SetNode(parent_node[i].GetSymbol(), parent_node[i].GetFrequency(), parent_node[i].GetLeftNode(), parent_node[i].GetRightNode(), parent_node[i].GetParentNode());
-							break;
-						}
-					}
-				}		
-				else if (ptr->GetSymbol() == parent_node[i].GetRightNode()->GetSymbol() && ptr->GetFrequency() == parent_node[i].GetRightNode()->GetFrequency()) {
-					huffman.push(one);
-					ptr = ptr->GetParentNode();
-					for (int i = 0; i < parent_num; i++) {
-						if (parent_node[i].GetFrequency() == ptr->GetFrequency()) {
-							ptr->SetNode(parent_node[i].GetSymbol(), parent_node[i].GetFrequency(), parent_node[i].GetLeftNode(), parent_node[i].GetRightNode(), parent_node[i].GetParentNode());
-							break;
-						}
-					}
-				}
-			}
-		}
-
-		while (!huffman.empty()) {
-			huffman_code[j]->append(to_string(huffman.top()));
-			huffman.pop();
-		}
-	}
-	
-	char character;
-	character = getc(inputFile);
-	character = getc(inputFile);
-	for (int i = 0; i < n; i++) {
-		if (node[i].GetSymbol() == character) {
-			printf("%d", stoi(*huffman_code[i]));
-			break;
-		}
-	}
+	// 빈도수 내림차순으로 허프만 코드 출력
+	//for (int i = 0; i < n; i++) {
+	//	printf("%d\n", stoi(*huffman_code[i]));
+	//}
 
 	for (int i = 0; i < n; i++) {
 		delete[] huffman_code[i];
 	}
-
 	delete[] huffman_code;
-	*/
 	delete[] node;
-	// fclose(inputFile);
+	
+	fclose(inputFile);
 	return 0;
 }
