@@ -140,8 +140,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="class.h" />
+    <ClInclude Include="huffman.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="compressor.cpp" />
+    <ClCompile Include="Decompressor.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -6,7 +6,15 @@
 using namespace std;
 
 int main(void) {
-	FILE* inputFile = fopen("test.txt", "r");	// 입력 파일 읽기 모드로 염
+	char fileName[100];
+	FILE* inputFile; //소스 파일
+	FILE* outputFile; //목적 파일
+	FILE* hufFile; //허프만 데이터 파일
+
+	printf("압축할 파일 이름을 입력하세요:");
+	scanf("%s", &fileName);
+	inputFile = fopen(fileName, "rb");
+
 	int enterkey = -1;	// enterkey 개수를 세는 변수
 
 	// 파일이 없을 경우 프로그램 종료
@@ -131,9 +139,14 @@ int main(void) {
 	Node_Huffman(node, parent_node, parent_num, n, huffman_code, huffman);
 
 	// 빈도수 내림차순으로 허프만 코드 출력
-	//for (int i = 0; i < n; i++) {
-	//	printf("%d\n", stoi(*huffman_code[i]));
-	//}
+	/*
+	for (int i = 0; i < n; i++) {
+		printf("%d\n", stoi(*huffman_code[i]));
+	}
+	*/
+
+	// 파일에 적혀있는 대로 허프만 코드 출력
+	
 
 	for (int i = 0; i < n; i++) {
 		delete[] huffman_code[i];
